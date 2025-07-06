@@ -2,6 +2,8 @@ import requests
 from server.config import Config
 from server.services.categorizer import categorize_article
 from server.repositories.article_repo import store_articles
+from server.repositories.admin_repo import update_last_accessed_db
+from server.services.notifier import send_batch_notifications
 
 def fetch_news_from_newsapi():
     url = f"https://newsapi.org/v2/top-headlines?country=us&apiKey={Config.NEWSAPI_KEY}"
@@ -10,6 +12,7 @@ def fetch_news_from_newsapi():
         response.raise_for_status()
         articles = response.json().get("articles", [])
         print(f"[NewsAPI] Fetched {len(articles)} articles")
+        update_last_accessed_db("News API")  # Update last_accessed for News API
         return articles
     except Exception as e:
         print(f"[NewsAPI] Error fetching articles: {e}")
@@ -22,6 +25,7 @@ def fetch_news_from_thenewsapi():
         response.raise_for_status()
         articles = response.json().get("data", [])
         print(f"[TheNewsAPI] Fetched {len(articles)} articles")
+        update_last_accessed_db("The News API")  # Update last_accessed for The News API
         return articles
     except Exception as e:
         print(f"[TheNewsAPI] Error fetching articles: {e}")
@@ -44,3 +48,4 @@ def fetch_and_store_news():
             })
     print(f"[Fetcher] Total articles to store: {len(articles)}")
     store_articles(articles)
+    send_batch_notifications()

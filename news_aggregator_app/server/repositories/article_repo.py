@@ -42,7 +42,7 @@ def store_articles(articles):
 def get_articles(date=None, start=None, end=None, category=None):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    query = "SELECT * FROM articles WHERE 1=1"
+    query = "SELECT * FROM articles WHERE hidden=0"
     params = []
     if category:
         query += " AND category=%s"
@@ -53,6 +53,15 @@ def get_articles(date=None, start=None, end=None, category=None):
     if start and end:
         query += " AND DATE(published_at) BETWEEN %s AND %s"
         params.extend([start, end])
+    hidden_cats = get_hidden_categories()
+    if hidden_cats:
+        query += " AND category NOT IN (%s)" % (",".join(["%s"]*len(hidden_cats)))
+        params.extend(hidden_cats)
+    filtered = get_filtered_keywords()
+    if filtered:
+        for kw in filtered:
+            query += " AND title NOT LIKE %s AND content NOT LIKE %s"
+            params.extend([f"%{kw}%", f"%{kw}%"])
     query += " ORDER BY published_at DESC"
     cursor.execute(query, tuple(params))
     articles = cursor.fetchall()
@@ -126,3 +135,97 @@ def get_recent_articles(hours=3):
     cursor.close()
     conn.close()
     return articles
+
+def report_article_db(article_id, user_id, threshold=3):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM article_reports WHERE article_id=%s AND user_id=%s", (article_id, user_id))
+    if not cursor.fetchone():
+        cursor.execute("INSERT INTO article_reports (article_id, user_id) VALUES (%s, %s)", (article_id, user_id))
+        conn.commit()
+    cursor.execute("SELECT COUNT(*) as cnt FROM article_reports WHERE article_id=%s", (article_id,))
+    count = cursor.fetchone()[0]
+    if count >= threshold:
+        cursor.execute("UPDATE articles SET hidden=1 WHERE id=%s", (article_id,))
+        conn.commit()
+    cursor.close()
+    conn.close()
+    return {"message": f"Article reported. Total reports: {count}"}
+
+def count_reports(article_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM article_reports WHERE article_id=%s", (article_id,))
+    count = cursor.fetchone()[0]
+    cursor.close()
+    conn.close()
+    return count
+
+def set_article_hidden(article_id, hide):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE articles SET hidden=%s WHERE id=%s", (1 if hide else 0, article_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return {"message": f"Article {'hidden' if hide else 'unhidden'}."}
+
+def get_reported_articles_db():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT a.*, COUNT(r.id) as report_count
+        FROM articles a
+        JOIN article_reports r ON a.id = r.article_id
+        GROUP BY a.id
+        ORDER BY report_count DESC
+    """)
+    articles = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return articles
+
+def set_category_hidden(category, hide):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE categories SET hidden=%s WHERE name=%s", (1 if hide else 0, category))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return {"message": f"Category '{category}' {'hidden' if hide else 'unhidden'}."}
+
+def get_hidden_categories():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM categories WHERE hidden=1")
+    categories = [row[0] for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return categories
+
+def get_filtered_keywords():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT keyword FROM filtered_keywords")
+    keywords = [row[0] for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return keywords
+
+def add_filtered_keyword(keyword):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO filtered_keywords (keyword) VALUES (%s)", (keyword,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return {"message": "Keyword added."}
+
+def remove_filtered_keyword(keyword):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM filtered_keywords WHERE keyword=%s", (keyword,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return {"message": "Keyword removed."}

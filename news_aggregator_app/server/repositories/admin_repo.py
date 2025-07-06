@@ -1,4 +1,5 @@
 from server.db.db import get_db_connection
+from datetime import datetime
 
 def list_sources_db():
     conn = get_db_connection()
@@ -44,3 +45,16 @@ def add_category_db(name, description=None):
     cursor.close()
     conn.close()
     return {"message": "Category added."}
+
+def update_last_accessed_db(source_name):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE external_sources SET last_accessed = %s WHERE name = %s",
+            (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), source_name)
+        )
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()

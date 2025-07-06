@@ -38,6 +38,7 @@ def update_notification(user_id, category, enabled=None, keywords=None):
     conn.commit()
     cursor.close()
     conn.close()
+    return {"message": "Notification settings updated."}
 
 def get_users_for_notification():
     conn = get_db_connection()

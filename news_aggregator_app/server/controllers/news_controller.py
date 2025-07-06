@@ -1,6 +1,6 @@
 from server.repositories.article_repo import (
     get_articles, get_article_by_id, search_articles_db, get_categories_db,
-    like_article_db, dislike_article_db
+    like_article_db, dislike_article_db, report_article_db
 )
 
 def get_headlines(date=None, start=None, end=None, category=None):
@@ -20,3 +20,6 @@ def like_article(article_id, user_id):
 
 def dislike_article(article_id, user_id):
     return dislike_article_db(article_id, user_id)
+
+def report_article(article_id, user_id):
+    return report_article_db(article_id, user_id)

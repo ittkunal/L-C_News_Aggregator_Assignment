@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
 from server.controllers.news_controller import (
-    get_headlines, get_article, search_articles, get_categories, like_article, dislike_article
+    get_headlines, get_article, search_articles, get_categories, like_article, dislike_article, report_article
 )
 
 router = APIRouter()
@@ -28,3 +28,10 @@ def like(article_id: int, user_id: int):
 @router.post("/{article_id}/dislike")
 def dislike(article_id: int, user_id: int):
     return dislike_article(article_id, user_id)
+
+def report(article_id: int, user_id: int):
+    return report_article(article_id, user_id)
+
+@router.post("/{article_id}/report")
+def report(article_id: int, user_id: int):
+    return report_article(article_id, user_id)

@@ -2,12 +2,13 @@ import requests
 from client.utils.session_store import set_session
 from client.menus.admin_menu import show_admin_menu
 from client.menus.user_menu import show_user_menu
+from getpass import getpass
 
 API_URL = "http://localhost:8000/auth"
 
 def login():
     username = input("Username: ")
-    password = input("Password: ")
+    password = getpass("Password: ")
     resp = requests.post(f"{API_URL}/login", json={"username": username, "password": password})
     if resp.status_code == 200:
         data = resp.json()
@@ -20,7 +21,6 @@ def login():
     else:
         try:
             error = resp.json()
-            # Handle validation errors (422) which return a list in 'detail'
             if isinstance(error.get("detail"), list):
                 for err in error["detail"]:
                     print(f"Login failed: {err.get('msg')}")
@@ -32,7 +32,7 @@ def login():
 def signup():
     username = input("Username: ")
     email = input("Email: ")
-    password = input("Password: ")
+    password = getpass("Password: ")
     resp = requests.post(f"{API_URL}/signup", json={"username": username, "email": email, "password": password})
     if resp.status_code == 200:
         print("Signup successful! Please login.")
