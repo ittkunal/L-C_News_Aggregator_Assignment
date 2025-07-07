@@ -12,7 +12,7 @@ def fetch_news_from_newsapi():
         response.raise_for_status()
         articles = response.json().get("articles", [])
         print(f"[NewsAPI] Fetched {len(articles)} articles")
-        update_last_accessed_db("News API")  # Update last_accessed for News API
+        update_last_accessed_db("News API")
         return articles
     except Exception as e:
         print(f"[NewsAPI] Error fetching articles: {e}")
@@ -25,7 +25,7 @@ def fetch_news_from_thenewsapi():
         response.raise_for_status()
         articles = response.json().get("data", [])
         print(f"[TheNewsAPI] Fetched {len(articles)} articles")
-        update_last_accessed_db("The News API")  # Update last_accessed for The News API
+        update_last_accessed_db("The News API")
         return articles
     except Exception as e:
         print(f"[TheNewsAPI] Error fetching articles: {e}")

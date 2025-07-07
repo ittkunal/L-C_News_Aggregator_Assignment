@@ -192,15 +192,19 @@ def show_notifications_menu():
                 f"{API_URL}/user/notifications", params={"user_id": user_id}
             )
             notifications = resp.json()
-            notif_dict = {n["type"]: n for n in notifications}
+            print("DEBUG: notifications =", notifications)
+            notif_dict = {n["type"].lower(): n for n in notifications}
             if not categories:
                 print("No categories found.")
             else:
                 print("\nYour notification settings:")
                 for cat in categories:
-                    enabled = notif_dict.get(cat["name"], {}).get("enabled", False)
-                    if isinstance(enabled, int):
-                        enabled = enabled == 1
+                    enabled = notif_dict.get(cat["name"].lower(), {}).get("enabled", False)
+                    print(f"DEBUG: cat['name']={cat['name']}, enabled={enabled}, notif_dict={notif_dict.get(cat['name'], {})}")
+                    try:
+                        enabled = int(enabled) == 1
+                    except Exception:
+                        enabled = str(enabled).lower() == "true"
                     print(
                         f"{cat['name'].capitalize()}: {'Enabled' if enabled else 'Disabled'}"
                     )
@@ -223,10 +227,12 @@ def configure_notifications(user_id):
     while True:
         print("\nC O N F I G U R E - N O T I F I C A T I O N S")
         for idx, cat in enumerate(categories, 1):
-            enabled = notif_dict.get(cat["name"], {}).get("enabled", False)
-            if isinstance(enabled, int):
-                enabled = enabled == 1
-            keywords = notif_dict.get(cat["name"], {}).get("keywords", "")
+            enabled = notif_dict.get(cat["name"].lower(), {}).get("enabled", False)
+            try:
+                enabled = int(enabled) == 1
+            except Exception:
+                enabled = str(enabled).lower() == "true"
+            keywords = notif_dict.get(cat["name"].lower(), {}).get("keywords", "")
             if enabled:
                 print(
                     f"{idx}. {cat['name'].capitalize()} - Enabled (keywords: {keywords})"
@@ -239,6 +245,10 @@ def configure_notifications(user_id):
         if choice.isdigit() and 1 <= int(choice) <= len(categories):
             cat_name = categories[int(choice) - 1]["name"]
             current = notif_dict.get(cat_name, {}).get("enabled", False)
+            try:
+                current = int(current) == 1
+            except Exception:
+                current = str(current).lower() == "true"
             keywords = notif_dict.get(cat_name, {}).get("keywords", "")
             while True:
                 print(

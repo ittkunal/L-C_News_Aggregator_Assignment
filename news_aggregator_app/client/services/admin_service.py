@@ -18,7 +18,7 @@ def view_sources():
             print("Failed to fetch sources. Server returned:", resp.status_code)
     except Exception as e:
         print("Error fetching sources:", e)
-    print()  # Adds a blank line after the list
+    print()
 
 def view_source_details():
     try:
@@ -35,7 +35,7 @@ def view_source_details():
             print("Failed to fetch sources. Server returned:", resp.status_code)
     except Exception as e:
         print("Error fetching sources:", e)
-    print()  # Adds a blank line after the list
+    print()
 
 def update_source():
     source_id = input("Enter external server ID: ")

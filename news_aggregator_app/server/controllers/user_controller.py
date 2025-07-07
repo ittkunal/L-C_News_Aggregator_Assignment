@@ -22,7 +22,7 @@ def delete_saved_article(user_id, article_id):
 def get_notifications(user_id):
     return get_notifications_by_user(user_id)
 
-def update_notifications(user_id, type, keywords=None, enabled=None):
+def update_notifications(user_id, type, enabled=None, keywords=None):
     from server.repositories.notification_repo import update_notification
     return update_notification(user_id, type, enabled, keywords)
 

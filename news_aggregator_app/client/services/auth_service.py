@@ -3,6 +3,10 @@ from client.utils.session_store import set_session
 from client.menus.admin_menu import show_admin_menu
 from client.menus.user_menu import show_user_menu
 from getpass import getpass
+import re
+
+def is_valid_email(email):
+    return re.match(r"[^@]+@[^@]+\.[^@]+", email) is not None
 
 API_URL = "http://localhost:8000/auth"
 
@@ -32,6 +36,9 @@ def login():
 def signup():
     username = input("Username: ")
     email = input("Email: ")
+    if not is_valid_email(email):
+        print("Invalid email address. Please try again.")
+        return
     password = getpass("Password: ")
     resp = requests.post(f"{API_URL}/signup", json={"username": username, "email": email, "password": password})
     if resp.status_code == 200:

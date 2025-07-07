@@ -46,7 +46,7 @@ def notifications(user_id: int):
 
 @router.put("/notifications")
 def update_notifications_route(user_id: int, type: str, keywords: str = None, enabled: bool = None):
-    return update_notifications(user_id, type, keywords, enabled)
+    return update_notifications(user_id, type, enabled, keywords)
 
 
 @router.post("/report-article")
