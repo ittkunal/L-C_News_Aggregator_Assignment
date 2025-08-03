@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException, status
 from server.schemas.auth_schema import UserLogin, UserSignup
 from server.controllers.auth_controller import login_user, signup_user
 
@@ -11,3 +11,4 @@ def login(user: UserLogin):
 @router.post("/signup")
 def signup(user: UserSignup):
     return signup_user(user)
+
