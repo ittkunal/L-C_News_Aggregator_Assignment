@@ -8,6 +8,7 @@ from server.controllers.user_controller import (
     get_notifications,
     update_notifications,
     report_article_controller,
+    get_notification_articles,
 )
 
 router = APIRouter()
@@ -45,3 +46,7 @@ def report_article_route(
     article_id: int = Body(...), user_id: int = Body(...), reason: str = Body(None)
 ):
     return report_article_controller(article_id, user_id, reason)
+
+@router.get("/notification-articles")
+def notification_articles(user_id: int):
+    return get_notification_articles(user_id)

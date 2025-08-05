@@ -1,11 +1,7 @@
 import mysql.connector
-from server.config import Config
+from server.config import DB_CONFIG
 
 def get_db_connection():
-    return mysql.connector.connect(
-        host=Config.DB_HOST,
-        user=Config.DB_USER,
-        password=Config.DB_PASSWORD,
-        database=Config.DB_NAME,
-        autocommit=True
-    )
+    config = DB_CONFIG.copy()
+    config['autocommit'] = True
+    return mysql.connector.connect(**config)

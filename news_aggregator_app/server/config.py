@@ -16,3 +16,11 @@ class Config:
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")
     THENEWSAPI_KEY = os.getenv("THENEWSAPI_KEY")
+
+# Database configuration for mysql-connector
+DB_CONFIG = {
+    'host': os.getenv("DB_HOST", "localhost"),
+    'user': os.getenv("DB_USER", "root"),
+    'password': os.getenv("DB_PASSWORD"),
+    'database': os.getenv("DB_NAME", "news_aggregator")
+}

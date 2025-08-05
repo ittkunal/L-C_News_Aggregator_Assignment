@@ -32,8 +32,8 @@ def dislike(article_id: int, user_id: int):
     return dislike_article(article_id, user_id)
 
 @router.post("/{article_id}/report")
-def report(article_id: int, user_id: int):
-    return report_article(article_id, user_id)
+def report(article_id: int, user_id: int = Body(...), reason: str = Body(None)):
+    return report_article(article_id, user_id, reason)
 
 
 # RESTful endpoints to save/delete articles

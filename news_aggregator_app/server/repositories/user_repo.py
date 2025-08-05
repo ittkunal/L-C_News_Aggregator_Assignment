@@ -1,4 +1,5 @@
 from server.db.db import get_db_connection
+from server.repositories.article_repo import article_exists
 
 def get_user_by_email(email):
     conn = get_db_connection()
@@ -50,7 +51,7 @@ def get_saved_articles_db(user_id):
     cursor.execute("""
         SELECT a.* FROM saved_articles sa
         JOIN articles a ON sa.article_id = a.id
-        WHERE sa.user_id=%s
+        WHERE sa.user_id=%s AND a.hidden=0
         ORDER BY sa.saved_at DESC
     """, (user_id,))
     articles = cursor.fetchall()
@@ -61,7 +62,22 @@ def get_saved_articles_db(user_id):
 def save_article_db(user_id, article_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("INSERT IGNORE INTO saved_articles (user_id, article_id) VALUES (%s, %s)", (user_id, article_id))
+    
+    # First check if the article exists and is not hidden
+    if not article_exists(article_id):
+        cursor.close()
+        conn.close()
+        return {"error": "Article not found"}
+    
+    # Check if already saved
+    cursor.execute("SELECT id FROM saved_articles WHERE user_id=%s AND article_id=%s", (user_id, article_id))
+    if cursor.fetchone():
+        cursor.close()
+        conn.close()
+        return {"error": "Article already saved"}
+    
+    # Save the article
+    cursor.execute("INSERT INTO saved_articles (user_id, article_id) VALUES (%s, %s)", (user_id, article_id))
     conn.commit()
     cursor.close()
     conn.close()
@@ -70,6 +86,14 @@ def save_article_db(user_id, article_id):
 def delete_saved_article_db(user_id, article_id):
     conn = get_db_connection()
     cursor = conn.cursor()
+    
+    # Check if the saved article exists
+    cursor.execute("SELECT id FROM saved_articles WHERE user_id=%s AND article_id=%s", (user_id, article_id))
+    if not cursor.fetchone():
+        cursor.close()
+        conn.close()
+        return {"error": "Saved article not found"}
+    
     cursor.execute("DELETE FROM saved_articles WHERE user_id=%s AND article_id=%s", (user_id, article_id))
     conn.commit()
     cursor.close()

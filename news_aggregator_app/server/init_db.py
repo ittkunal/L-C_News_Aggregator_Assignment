@@ -1,7 +1,8 @@
-from server.db.db import get_db_connection
+import mysql.connector
+from server.config import DB_CONFIG
 
 def init_db():
-    conn = get_db_connection()
+    conn = mysql.connector.connect(**DB_CONFIG)
     cursor = conn.cursor()
 
     # Users Table
@@ -10,19 +11,20 @@ def init_db():
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(50) UNIQUE NOT NULL,
         email VARCHAR(100) UNIQUE NOT NULL,
-        password_hash VARCHAR(128) NOT NULL,
+        password VARCHAR(255) NOT NULL,
         is_admin BOOLEAN DEFAULT FALSE,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
-    # Categories Table with added is_hidden column
+    # Categories Table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS categories (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(50) UNIQUE NOT NULL,
-        description VARCHAR(255),
-        is_hidden BOOLEAN DEFAULT FALSE
+        description TEXT,
+        hidden BOOLEAN DEFAULT FALSE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
@@ -30,10 +32,9 @@ def init_db():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS external_sources (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) UNIQUE NOT NULL,
-        api_key VARCHAR(255) NOT NULL,
-        status BOOLEAN DEFAULT TRUE,
-        last_accessed DATETIME
+        name VARCHAR(100) NOT NULL,
+        api_key VARCHAR(255),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
@@ -126,6 +127,24 @@ def init_db():
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
+
+    # Migration: Add missing columns if they don't exist
+    try:
+        # Check if reason column exists in article_reports table
+        cursor.execute("SHOW COLUMNS FROM article_reports LIKE 'reason'")
+        if not cursor.fetchone():
+            print("Adding 'reason' column to article_reports table...")
+            cursor.execute("ALTER TABLE article_reports ADD COLUMN reason VARCHAR(255)")
+            print("✅ 'reason' column added successfully!")
+        
+        # Check if hidden column exists in articles table
+        cursor.execute("SHOW COLUMNS FROM articles LIKE 'hidden'")
+        if not cursor.fetchone():
+            print("Adding 'hidden' column to articles table...")
+            cursor.execute("ALTER TABLE articles ADD COLUMN hidden BOOLEAN DEFAULT FALSE")
+            print("✅ 'hidden' column added successfully!")
+    except Exception as e:
+        print(f"Migration warning: {e}")
 
     conn.commit()
     cursor.close()

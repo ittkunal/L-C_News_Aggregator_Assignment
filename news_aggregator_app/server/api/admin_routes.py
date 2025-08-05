@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from server.controllers.admin_controller import (
     list_sources,
     get_source,
@@ -11,7 +11,10 @@ from server.controllers.admin_controller import (
     add_filtered_keyword_controller,
     remove_filtered_keyword_controller,
     get_filtered_keywords_controller,
+    get_article_report_details_controller,
+    get_hidden_articles_controller,
 )
+from server.schemas.admin_schema import UpdateSourceRequest, AddSourceRequest, AddCategoryRequest, FilteredKeywordRequest
 
 router = APIRouter()
 
@@ -24,16 +27,16 @@ def source(source_id: int):
     return get_source(source_id)
 
 @router.put("/external-sources/{source_id}")
-def update(source_id: int, api_key: str):
-    return update_source(source_id, api_key)
+def update(source_id: int, request: UpdateSourceRequest):
+    return update_source(source_id, request.api_key)
 
 @router.post("/external-sources")
-def add(name: str, api_key: str):
-    return add_source(name, api_key)
+def add(request: AddSourceRequest):
+    return add_source(request.name, request.api_key)
 
 @router.post("/categories")
-def add_cat(name: str, description: str = None):
-    return add_category(name, description)
+def add_cat(request: AddCategoryRequest):
+    return add_category(request.name, request.description)
 
 @router.get("/reported-articles")
 def reported_articles():
@@ -48,19 +51,25 @@ def hide_category_route(category: str, hide: bool):
     return hide_category(category, hide)
 
 @router.post("/filtered-keywords")
-def add_keyword(keyword: str):
-    return add_filtered_keyword_controller(keyword)
+def add_keyword(request: FilteredKeywordRequest):
+    return add_filtered_keyword_controller(request.keyword)
 
 @router.delete("/filtered-keywords")
-def remove_keyword(keyword: str):
-    return remove_filtered_keyword_controller(keyword)
+def remove_keyword(request: FilteredKeywordRequest):
+    return remove_filtered_keyword_controller(request.keyword)
 
 @router.get("/filtered-keywords")
 def list_keywords():
     return get_filtered_keywords_controller()
 
-# Optional: Uncomment and add if you have category update in your admin_repo.py
-# @router.put("/categories/{category_id}")
-# def update_category(category_id: int, name: str = None, description: str = None):
-#     from server.repositories.admin_repo import update_category_db
-#     return update_category_db(category_id, name, description)
+@router.get("/reported-articles/{article_id}/details")
+def article_report_details(article_id: int):
+    return get_article_report_details_controller(article_id)
+
+@router.post("/articles/{article_id}/toggle-visibility")
+def toggle_article_visibility(article_id: int, hide: bool):
+    return hide_article(article_id, hide)
+
+@router.get("/hidden-articles")
+def hidden_articles():
+    return get_hidden_articles_controller()
